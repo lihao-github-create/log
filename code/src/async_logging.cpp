@@ -2,8 +2,10 @@
 #include "buffer.h"
 #include "log_file.h"
 #include "mutex_macro.h"
+#include <assert.h>
 #include <chrono>
 #include <condition_variable>
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -70,6 +72,7 @@ AsyncLogging::Impl::Impl(const string &basename, int rollSize,
 
 void AsyncLogging::Impl::append(const char *logline, size_t len) {
   std::lock_guard<std::mutex> guard(mutex_);
+  assert(currentBuffer_ != nullptr);
   if (currentBuffer_->avail() > len) {
     currentBuffer_->append(logline, len);
   } else {
@@ -100,19 +103,21 @@ void AsyncLogging::Impl::threadFunc() {
 
   // 从 buffers_ 读取格式化后的日志
   while (running_) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (buffers_.empty()) {
-      cond_.wait_for(lock, std::chrono::seconds(flushInterval_));
-    }
-    buffers_.push_back(std::move(currentBuffer_));
-    currentBuffer_ = std::move(newBuffer1);
-    buffersToWrite.swap(buffers_);
-    if (!nextBuffer_) {
-      nextBuffer_ = std::move(newBuffer2);
+    {
+      std::unique_lock<std::mutex> lock(mutex_);
+      if (buffers_.empty()) {
+        cond_.wait_for(lock, std::chrono::seconds(flushInterval_));
+      }
+      buffers_.push_back(std::move(currentBuffer_));
+      currentBuffer_ = std::move(newBuffer1);
+      buffersToWrite.swap(buffers_);
+      if (!nextBuffer_) {
+        nextBuffer_ = std::move(newBuffer2);
+      }
     }
     // 若日志输出太快，则丢弃部分日志
     if (buffersToWrite.size() > NUM_DROP_BUFFERS_THRESHOLD) {
-      char buf[256] = {0};
+      char buf[256] = {'\0'};
       snprintf(buf, sizeof buf, "Drop log message %ld large buffers\n",
                buffersToWrite.size() - 2);
       // 同时输出到终端和日志文件
@@ -134,13 +139,13 @@ void AsyncLogging::Impl::threadFunc() {
     if (!newBuffer1) {
       newBuffer1 = std::move(buffersToWrite.back());
       buffersToWrite.pop_back();
-      newBuffer1.reset();
+      newBuffer1->reset();
     }
 
     if (!newBuffer2) {
       newBuffer2 = std::move(buffersToWrite.back());
       buffersToWrite.pop_back();
-      newBuffer2.reset();
+      newBuffer2->reset();
     }
 
     buffersToWrite.clear();
@@ -150,7 +155,7 @@ void AsyncLogging::Impl::threadFunc() {
 }
 
 AsyncLogging::AsyncLogging(const string &basename, int rollSize,
-                           int flushInterval = 3)
+                           int flushInterval)
     : impl_(std::make_unique<Impl>(basename, rollSize, flushInterval)) {}
 AsyncLogging::~AsyncLogging() {}
 

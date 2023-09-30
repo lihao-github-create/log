@@ -16,6 +16,7 @@
  */
 
 #ifndef __BUFFER_H__
+#define __BUFFER_H__
 
 #include "noncopyable.h"
 #include "string_piece.h"
@@ -42,7 +43,7 @@ public:
   void append(const char *msg, size_t len) {
     if (avail() > len) {
       memcpy(cur_, msg, len);
-      cur += len;
+      cur_ += len;
     }
   }
 

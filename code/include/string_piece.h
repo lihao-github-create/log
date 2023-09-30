@@ -55,7 +55,7 @@ public:
   }
   void set(const char *str) {
     ptr_ = str;
-    length_ = static_cast<int>(strlen(str));
+    length_ = strlen(str);
   }
   void set(const void *buffer, int len) {
     ptr_ = reinterpret_cast<const char *>(buffer);

@@ -16,8 +16,8 @@
  * =====================================================================================
  */
 
-#ifndef COMMON_SYS_NONCOPYABLE_H_
-#define COMMON_SYS_NONCOPYABLE_H_
+#ifndef __NONCOPYABLE_H__
+#define __NONCOPYABLE_H__
 
 #define NOCOPYABLE_DECLARE(typename)                                           \
 public:                                                                        \

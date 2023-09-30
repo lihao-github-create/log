@@ -28,7 +28,7 @@ public:
 };
 
 Logger::Impl::Impl(enum LogLevel level, const char *file, int line)
-    : stream_(), level_(level), file_(file), line_(line) {
+    : stream_(), level_(level), line_(line), file_(file) {
   formatTime();
   currentthread::tid();
   stream_ << StringPiece(currentthread::tidString(),
@@ -51,8 +51,8 @@ void Logger::Impl::formatTime() {
   struct tm *timeInfo = gmtime(&seconds);
 
   // 输出当前时间到 stream_中
-  char t_time[64] = {0};
-  snprintf(t_time, sizeof(t_time), "%4d-%02d-%02d %02d:%02d:%02d.06d(UTC) \n",
+  char t_time[64] = {'\0'};
+  snprintf(t_time, sizeof(t_time), "%4d-%02d-%02d %02d:%02d:%02d.%06ld(UTC)",
            timeInfo->tm_year + 1900, timeInfo->tm_mon + 1, timeInfo->tm_mday,
            timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec, microseconds);
   stream_ << t_time;
@@ -63,9 +63,7 @@ void Logger::Impl::finish() {
 }
 
 /**********************************Logger*********************************/
-void defaultOutput(const char *msg, int len) {
-  size_t n = fwrite(msg, 1, len, stdout);
-}
+void defaultOutput(const char *msg, int len) { fwrite(msg, 1, len, stdout); }
 
 void defaultFlush() { fflush(stdout); }
 
@@ -90,6 +88,8 @@ Logger::~Logger() {
     abort();
   }
 }
+
+LogStream &Logger::stream() { return impl_->stream(); }
 
 void Logger::setLogLevel(LogLevel level) { level_ = level; }
 LogLevel Logger::getLogLevel() { return level_; }

@@ -19,22 +19,22 @@
 
 namespace log {
 
+extern LogLevel getLogLevel();
+extern void setLogLevel(LogLevel level);
+extern void setOutput(OutputFunc);
+extern void setFlush(FlushFunc);
+
 #define LOG_TRACE                                                              \
-  if (Logger::getLogLevel() <= LogLevel::TRACE)                                \
+  if (getLogLevel() <= LogLevel::TRACE)                                        \
   Logger(__FILE__, __LINE__, LogLevel::TRACE, __func__).stream()
 #define LOG_DEBUG                                                              \
-  if (Logger::getLogLevel() <= LogLevel::DEBUG)                                \
+  if (getLogLevel() <= LogLevel::DEBUG)                                        \
   Logger(__FILE__, __LINE__, LogLevel::DEBUG, __func__).stream()
 #define LOG_INFO                                                               \
-  if (Logger::getLogLevel() <= LogLevel::INFO)                                 \
+  if (getLogLevel() <= LogLevel::INFO)                                         \
   Logger(__FILE__, __LINE__, LogLevel::INFO).stream()
 #define LOG_WARN Logger(__FILE__, __LINE__, LogLevel::WARN).stream()
 #define LOG_ERROR Logger(__FILE__, __LINE__, LogLevel::ERROR).stream()
 #define LOG_FATAL Logger(__FILE__, __LINE__, LogLevel::FATAL).stream()
-
-static LogLevel getLogLevel();
-static void setLogLevel(LogLevel level);
-static void setOutput(OutputFunc);
-static void setFlush(FlushFunc);
 
 } // namespace log

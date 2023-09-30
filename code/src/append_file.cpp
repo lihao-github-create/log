@@ -1,4 +1,6 @@
 #include "append_file.h"
+#include <assert.h>
+#include <iostream>
 #include <stdio.h>
 
 namespace log {
@@ -14,7 +16,7 @@ public:
 
   void flush();
 
-  size_t writtenBytes() const { return writtenBytes_; }
+  size_t writtenBytes() const;
 
 private:
   FILE *fp_;
@@ -22,12 +24,17 @@ private:
   size_t writtenBytes_;
 };
 
-AppendFile::Impl::Impl(const string &filename)
-    : fp_(fopen(filename.c_str(), "ae")), writtenBytes_(0) {
+AppendFile::Impl::Impl(const string &filename) : writtenBytes_(0) {
+  fp_ = fopen(filename.c_str(), "ae");
+
+  assert(fp_ != nullptr);
   setbuffer(fp_, buffer_, sizeof buffer_);
 }
 
-AppendFile::Impl::~Impl() { fclose(fp_); }
+AppendFile::Impl::~Impl() {
+  flush();
+  fclose(fp_);
+}
 
 void AppendFile::Impl::append(const char *logline, size_t len) {
   size_t n = fwrite_unlocked(logline, 1, len, fp_);

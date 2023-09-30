@@ -26,7 +26,7 @@ class LogFile {
   NOCOPYABLE_DECLARE(LogFile)
 
 public:
-  LogFile(const string &basename, int rollSize, int flushInterval = 3);
+  LogFile(const std::string &basename, int rollSize, int flushInterval = 3);
   ~LogFile();
 
   void append(const char *logline, size_t len);

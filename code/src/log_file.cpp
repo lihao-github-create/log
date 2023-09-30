@@ -3,6 +3,7 @@
 #include "mutex_macro.h"
 #include <atomic>
 #include <chrono>
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <sys/time.h>
@@ -44,8 +45,8 @@ private:
 };
 
 LogFile::Impl::Impl(const string &basename, int rollSize, int flushInterval)
-    : basename_(basename), rollSize_(rollSize), flushInterval_(flushInterval),
-      file_(new AppendFile(basename)) {
+    : basename_(basename), rollSize_(rollSize), flushInterval_(flushInterval) {
+  rollFile();
   flushThread_ = thread([&]() {
     running_ = true;
     flushThreadFunc();
@@ -72,10 +73,7 @@ void LogFile::Impl::flush() {
 
 void LogFile::Impl::rollFile() {
   string filename = getLogFileName(basename_);
-  {
-    std::lock_guard<mutex> lock(mutex_);
-    file_.reset(new AppendFile(basename_));
-  }
+  file_.reset(new AppendFile(filename));
 }
 
 string LogFile::Impl::getLogFileName(const string &basename) {
@@ -84,7 +82,7 @@ string LogFile::Impl::getLogFileName(const string &basename) {
   // basename
   filename = basename;
   // time
-  char timebuf[32] = {0};
+  char timebuf[32] = {'\0'};
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   struct tm *timeInfo = gmtime(&tv.tv_sec);
@@ -95,7 +93,7 @@ string LogFile::Impl::getLogFileName(const string &basename) {
   // hostname
   filename += getHostName();
   // pid
-  char pidbuf[32] = {0};
+  char pidbuf[32] = {'\0'};
   snprintf(pidbuf, sizeof pidbuf, ".%d", getpid());
   filename += pidbuf;
   // .log
@@ -111,7 +109,7 @@ void LogFile::Impl::flushThreadFunc() {
   }
 }
 
-LogFile::LogFile(const string &basename, int rollSize, int flushInterval = 3)
+LogFile::LogFile(const string &basename, int rollSize, int flushInterval)
     : impl_(new Impl(basename, rollSize, flushInterval)) {}
 LogFile::~LogFile() {}
 
@@ -122,7 +120,7 @@ void LogFile::append(const char *logline, size_t len) {
 void LogFile::flush() { impl_->flush(); }
 
 string getHostName() {
-  char buf[256] = {0};
+  char buf[256] = {'\0'};
   if (gethostname(buf, sizeof buf) == 0) {
     return buf;
   } else {

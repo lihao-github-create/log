@@ -8,10 +8,11 @@ namespace log {
 namespace currentthread {
 
 thread_local int t_cachedTid = 0;
-thread_local char t_tidString[32] = {0};
+thread_local char t_tidString[32] = {'\0'};
 thread_local int t_tidStringLength = 6;
 thread_local const char *t_threadName = "unknown";
-void currentthread::cacheTid() {
+
+void cacheTid() {
   if (t_cachedTid == 0) {
     t_cachedTid = pthread_self();
     t_tidStringLength =
@@ -19,7 +20,8 @@ void currentthread::cacheTid() {
   }
 }
 
-bool currentthread::isMainThread() { return tid() == getpid(); }
+bool isMainThread() { return tid() == getpid(); }
+
 } // namespace currentthread
 
 } // namespace log
