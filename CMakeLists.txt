@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(my_project)
 
+# 在CMakeLists.txt中启用详细输出
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)
 

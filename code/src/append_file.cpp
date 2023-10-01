@@ -26,7 +26,6 @@ private:
 
 AppendFile::Impl::Impl(const string &filename) : writtenBytes_(0) {
   fp_ = fopen(filename.c_str(), "ae");
-
   assert(fp_ != nullptr);
   setbuffer(fp_, buffer_, sizeof buffer_);
 }

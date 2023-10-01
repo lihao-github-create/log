@@ -58,10 +58,6 @@ public:
 private:
   class Impl;
   std::unique_ptr<Impl> impl_;
-
-  static LogLevel level_;
-  static OutputFunc outputFunc_;
-  static FlushFunc flushFunc_;
 };
 
 } // namespace log

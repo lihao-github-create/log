@@ -8,6 +8,7 @@ build_project() {
     cd build  
     # 运行CMake
     cmake .. -DCMAKE_BUILD_TYPE=$1
+    make
         
     # 返回原始目录
     cd - || return

@@ -22,9 +22,13 @@ public:
 
   struct timeval currentTime_;
   LogStream stream_;
-  enum LogLevel level_;
+  LogLevel level_; // 当前日志级别
   int line_;
   const char *file_;
+
+  static LogLevel globalLevel_; // 日志库过滤日志级别
+  static OutputFunc outputFunc_;
+  static FlushFunc flushFunc_;
 };
 
 Logger::Impl::Impl(enum LogLevel level, const char *file, int line)
@@ -67,9 +71,9 @@ void defaultOutput(const char *msg, int len) { fwrite(msg, 1, len, stdout); }
 
 void defaultFlush() { fflush(stdout); }
 
-LogLevel Logger::level_ = LogLevel::INFO;
-OutputFunc Logger::outputFunc_ = defaultOutput;
-FlushFunc Logger::flushFunc_ = defaultFlush;
+LogLevel Logger::Impl::globalLevel_ = LogLevel::INFO;
+OutputFunc Logger::Impl::outputFunc_ = defaultOutput;
+FlushFunc Logger::Impl::flushFunc_ = defaultFlush;
 
 Logger::Logger(const char *file, int line, LogLevel level)
     : impl_(std::make_unique<Logger::Impl>(level, file, line)) {}
@@ -82,19 +86,19 @@ Logger::Logger(const char *file, int line, LogLevel level, const char *func)
 Logger::~Logger() {
   impl_->finish();
   const LogStream::Buffer &buf(impl_->stream().buffer());
-  outputFunc_(buf.data(), buf.length());
+  Impl::outputFunc_(buf.data(), buf.length());
   if (impl_->level_ == LogLevel::FATAL) {
-    flushFunc_();
+    Impl::flushFunc_();
     abort();
   }
 }
 
 LogStream &Logger::stream() { return impl_->stream(); }
 
-void Logger::setLogLevel(LogLevel level) { level_ = level; }
-LogLevel Logger::getLogLevel() { return level_; }
+void Logger::setLogLevel(LogLevel level) { Impl::globalLevel_ = level; }
+LogLevel Logger::getLogLevel() { return Impl::globalLevel_; }
 
-void Logger::setOutput(OutputFunc out) { outputFunc_ = out; }
-void Logger::setFlush(FlushFunc flush) { flushFunc_ = flush; }
+void Logger::setOutput(OutputFunc out) { Impl::outputFunc_ = out; }
+void Logger::setFlush(FlushFunc flush) { Impl::flushFunc_ = flush; }
 
 } // namespace log
